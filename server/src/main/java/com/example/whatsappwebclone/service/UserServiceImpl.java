@@ -31,22 +31,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findUserByProfile(String jwt) throws UserException{
         String email = tokenProvider.getEmailFromToken(jwt);
-        if(email.isEmpty()) {
-            throw new BadCredentialsException("Received invalid token ");
-        }
-        User user =userRepository.findByEmail(email);
+        Optional<User> user =userRepository.findByEmail(email);
 
-        if(user == null) {
-            throw new UserException("User Not Registered with the email provided");
+        if(user.isPresent()) {
+            return user.get();
         }
-        return user;
+        throw new BadCredentialsException("Received invalid token ");
     }
 
     @Override
     public User updateUser(Integer getId, UpdateUserRequest req) throws UserException {
         User user = findUserById(getId);
-        if(user.getFull_name() != null) user.setFull_name(req.getName());
-        if(user.getProfilePicture() != null) user.setProfilePicture(req.getProfilePicture());
+        if(req.getFull_name()!=null) {
+            user.setFull_name(req.getFull_name());
+        }
+        if(req.getProfile_picture()!=null) {
+            user.setProfile_picture(req.getProfile_picture());
+        }
         return userRepository.save(user);
     }
 

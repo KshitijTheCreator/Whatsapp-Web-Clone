@@ -8,6 +8,6 @@ import lombok.*;
 @Getter
 @Setter
 public class UpdateUserRequest {
-    private String name;
-    private String profilePicture;
+    private String full_name;
+    private String profile_picture;
 }

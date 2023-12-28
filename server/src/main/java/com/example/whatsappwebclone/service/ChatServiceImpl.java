@@ -13,27 +13,30 @@ import java.util.Optional;
 
 @Service
 public class ChatServiceImpl implements ChatService{
-    private ChatRepository chatRepository;
-    private UserService userService;
+    private final ChatRepository chatRepository;
+    private final UserService userService;
     public ChatServiceImpl(ChatRepository chatRepository, UserService userService) {
         this.chatRepository = chatRepository;
         this.userService = userService;
     }
     @Override
-    public Chat createChat(User reqUser, Integer userId2) throws UserException {
+    public Chat createChat(Integer reqUserId, Integer userId2) throws UserException {
+        User reqUser = userService.findUserById(reqUserId);
         User user = userService.findUserById(userId2);
+
         Chat chatExist = chatRepository.findSingleChatByUserIds(user, reqUser);
         if(chatExist!= null) {
             return chatExist;
         }
         //if no chat present we have to create new chat
         Chat chat = new Chat();
-        chat.setCreatedBy(reqUser);
+        chat.setCreated_by(reqUser);
         chat.getUsers().add(user);
         chat.getUsers().add(reqUser);
-        chat.setGroup(false);
+        chat.setIs_group(false);
+        return chatRepository.save(chat);
 
-        return chat;
+//        return chat;
     }
 
     @Override
@@ -53,78 +56,74 @@ public class ChatServiceImpl implements ChatService{
     }
 
     @Override
-    public Chat addUserToGroup(Integer userId, Integer chatId, User reqUser) throws UserException, ChatException {
-        Optional<Chat> opt= chatRepository.findById(chatId);
-        User user = userService.findUserById(userId);
-        if(opt.isPresent()) {
-            Chat chat =opt.get();
-            if(chat.getAdmins().contains(reqUser)) { // as only admin can add users
-                chat.getUsers().add(user);
-                return chatRepository.save(chat);
-            }
-            else throw new UserException("Only admins can perform this task");
-        }
-        throw new ChatException("Chat doesnt exists with id: "+ chatId);
+    public Chat addUserToGroup(Integer userId, Integer chatId) throws UserException, ChatException {
+        Chat chat =findChatById(chatId);
+        User user=userService.findUserById(userId);
+
+        chat.getUsers().add(user);
+
+
+        Chat updatedChat=chatRepository.save(chat);
+
+        return updatedChat;
     }
 
     @Override
-    public Chat createGroup(GroupChatRequest req, User admin) throws UserException {
+    public Chat createGroup(GroupChatRequest req, Integer adminId) throws UserException {
         Chat group = new Chat();
-        group.setGroup(true);
-        group.setChat_image(req.getChat_image());
-        group.setChat_name(req.getChat_name());
-        group.setCreatedBy(admin);
-        group.getAdmins().add(admin);
+        User admin = userService.findUserById(adminId);
+        group.setCreated_by(admin);
+        group.getUsers().add(admin);
 
         for(Integer userId: req.getUserIds()) {
             User groupMembers =userService.findUserById(userId);
             group.getUsers().add(groupMembers);
         }
-        return group;
+
+        group.setChat_name(req.getChat_name());
+        group.setChat_image(req.getChat_image());
+        group.setIs_group(true);
+        group.getAdmins().add(admin);
+
+        return chatRepository.save(group);
     }
 
     @Override
-    public Chat renameGroup(Integer chatId, String groupName, User reqUser) throws UserException, ChatException {
-        Optional<Chat> opt = chatRepository.findById(chatId);
-        if(opt.isPresent()) {
-            Chat chat = opt.get();
-            if(chat.getUsers().contains(reqUser)) {
-                chat.setChat_name(groupName);
-                chat.setChat_name(groupName);
-                return chatRepository.save(chat);
-            }
-            throw new ChatException("You are not allowed to perform the task");
-        }
-        throw new ChatException("Chat doesnt exists with id: "+ chatId);
+    public Chat renameGroup(Integer chatId, String groupName, Integer reqUserId) throws UserException, ChatException {
+        Chat chat=findChatById(chatId);
+        User user=userService.findUserById(reqUserId);
+
+
+        if(chat.getUsers().contains(user))
+            chat.setChat_name(groupName);
+
+        return chatRepository.save(chat);
     }
 
     @Override
-    public void deleteChat(Integer chatId, Integer userId) throws ChatException, UserException {
-        Optional<Chat> opt = chatRepository.findById(chatId);
-        if(opt.isPresent()) {
-            Chat chat = opt.get();
+    public Chat deleteChat(Integer chatId, Integer userId) throws ChatException, UserException {
+        User user=userService.findUserById(userId);
+        Chat chat=findChatById(chatId);
+
+        if((chat.getCreated_by().getId().equals(user.getId())) && !chat.getIs_group() ) {
             chatRepository.deleteById(chat.getId());
+
+            return chat;
         }
+        throw new ChatException("you dont have access to delete this chat");
     }
 
     @Override
-    public Chat removeFromGroup(Integer chatId, Integer userId, User reqUser) throws UserException, ChatException {
-        Optional<Chat> opt= chatRepository.findById(chatId);
-        User user = userService.findUserById(userId);
-        if(opt.isPresent()) {
-            Chat chat =opt.get();
-            if(chat.getAdmins().contains(reqUser)) { // as only admin can add users
-                chat.getUsers().remove(user);
-                return chatRepository.save(chat);
-            }
-            else if(chat.getUsers().contains(reqUser)) { // the requested user can remove or leave the group
-                if(user.getId().equals(reqUser.getId())) {
-                    chat.getUsers().remove(user);
-                    return chatRepository.save(chat);
-                }
-            }
-            throw new UserException("Only admins can remove other members.");
+    public Chat removeFromGroup(Integer chatId, Integer userId, Integer reqUserId) throws UserException, ChatException {
+        Chat chat=findChatById(chatId);
+        User user=userService.findUserById(userId);
+
+        User reqUser=userService.findUserById(reqUserId);
+
+        if(user.getId().equals(reqUser.getId()) ) {
+            chat.getUsers().remove(reqUser);
         }
-        throw new ChatException("Chat doesnt exists with id: "+ chatId);
+
+        return null;
     }
 }

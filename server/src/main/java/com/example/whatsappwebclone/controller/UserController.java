@@ -1,19 +1,20 @@
 package com.example.whatsappwebclone.controller;
 
+import com.example.whatsappwebclone.DTO.UserDTO;
+import com.example.whatsappwebclone.controller.mapper.UserDTOMapper;
 import com.example.whatsappwebclone.exception.UserException;
 import com.example.whatsappwebclone.model.User;
 import com.example.whatsappwebclone.request.UpdateUserRequest;
-import com.example.whatsappwebclone.response.ApiResponse;
 import com.example.whatsappwebclone.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.HashSet;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public class UserController{
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -21,25 +22,28 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<User> getUserProfileHandler(@RequestHeader("Authorization") String token) throws UserException {
+    public ResponseEntity<UserDTO> getUserProfileHandler(@RequestHeader("Authorization") String token) throws UserException {
         User user= userService.findUserByProfile(token);
-        return new ResponseEntity<>(user, HttpStatus.ACCEPTED);
+        UserDTO userDTO = UserDTOMapper.toUserDTO(user);
+        return new ResponseEntity<>(userDTO, HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<User>> searchUserHandler(@RequestParam("query") String query){
-        List<User> users = userService.searchUser(query);
-        return new ResponseEntity<>(users, HttpStatus.OK);
+    public ResponseEntity<HashSet<UserDTO>> searchUserHandler(@RequestParam("query") String query){
+        HashSet<User> users = new HashSet<>(userService.searchUser(query));
+        HashSet<UserDTO> userDTOs= UserDTOMapper.toUserDTOs(users);
+        return new ResponseEntity<>(userDTOs, HttpStatus.OK);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<ApiResponse> updateUserHandler(@RequestBody UpdateUserRequest req,
-                                                         @RequestHeader("Authorization") String token
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<UserDTO> updateUserHandler(
+            @PathVariable Integer userId,
+            @RequestBody UpdateUserRequest req
     ) throws UserException {
-        User user = userService.findUserByProfile(token);
-        userService.updateUser(user.getId(), req);
-        ApiResponse responseToken = new ApiResponse("User Updated Successfully", true);
-        return new ResponseEntity<>(responseToken, HttpStatus.ACCEPTED);
+
+        User updatedUser=userService.updateUser(userId, req);
+        UserDTO userDTO = UserDTOMapper.toUserDTO(updatedUser);
+        return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 }
 

@@ -6,21 +6,19 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Data
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Message {
+public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    private String content;
+    private String message;
+    private Boolean is_seen;
     private LocalDateTime timeStamp;
 
-    @ManyToOne // User can make many messages, but a single message will be created by only one user.
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
-
-    @ManyToOne // Similarly chat can have many messages but a single message will be created for the single chat only.
-    @JoinColumn(name = "chat_id")
-    private Chat chat;
 }

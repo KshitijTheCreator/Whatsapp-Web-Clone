@@ -9,6 +9,7 @@ import Status from "./Components/Status/Status";
 import DisplayStatus from "./Components/Status/DisplayStatus";
 import { Provider } from "react-redux";
 import { store } from "./Redux/store";
+import Profile from "./Components/Profile/Profile";
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
   {
     path: "/signup/",
     element: <Signup/>,
+  },
+  {
+    path: "/profile/",
+    element: <Profile/>,
   },
 ]);
 

@@ -1,11 +1,10 @@
 package com.example.whatsappwebclone.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -20,18 +19,27 @@ public class User {
     private Integer id;
     private String full_name;
     private String email;
-    private String profilePicture;
+    private String profile_picture;
     private String password;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof User user)) return false;
-        return Objects.equals(getId(), user.getId()) && Objects.equals(getFull_name(), user.getFull_name()) && Objects.equals(getEmail(), user.getEmail()) && Objects.equals(getProfilePicture(), user.getProfilePicture()) && Objects.equals(getPassword(), user.getPassword());
-    }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Notification> notifications= new ArrayList<>();
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getFull_name(), getEmail(), getProfilePicture(), getPassword());
+        return Objects.hash(email, full_name, id, password, profile_picture);
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        User other = (User) obj;
+        return Objects.equals(email, other.email) && Objects.equals(full_name, other.full_name)
+                && Objects.equals(id, other.id) && Objects.equals(password, other.password)
+                && Objects.equals(profile_picture, other.profile_picture);
     }
 }

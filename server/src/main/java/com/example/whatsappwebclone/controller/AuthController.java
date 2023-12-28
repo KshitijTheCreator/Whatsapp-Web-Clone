@@ -7,6 +7,7 @@ import com.example.whatsappwebclone.repository.UserRepository;
 import com.example.whatsappwebclone.request.LoginRequest;
 import com.example.whatsappwebclone.response.AuthResponse;
 import com.example.whatsappwebclone.service.CustomUserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +17,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -33,13 +36,13 @@ public class AuthController {
         this.customUserService = customUserService;
     }
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody User user) throws UserException {
+    public ResponseEntity<AuthResponse> createUserHandler(@Valid @RequestBody User user) throws UserException {
         String email = user.getEmail();
         String name = user.getFull_name();
         String password = user.getPassword();
 
-        User isUser = userRepository.findByEmail(email);
-        if (isUser != null) {
+        Optional<User> isUser = userRepository.findByEmail(email);
+        if (isUser.isPresent()) {
             throw new UserException("Email Seems to be already registered");
         }
         //if user is not registered we can create new user for that for signup

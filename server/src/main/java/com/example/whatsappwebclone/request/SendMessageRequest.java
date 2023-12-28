@@ -1,12 +1,10 @@
 package com.example.whatsappwebclone.request;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Setter
 @Getter
 public class SendMessageRequest {
