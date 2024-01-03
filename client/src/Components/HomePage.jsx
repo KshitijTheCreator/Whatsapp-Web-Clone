@@ -44,6 +44,7 @@ const HomePage = () => {
   const open = Boolean(anchorEl);
   const[stompClient, setStompClient] = useState();
   const[isConnect, setIsConnect] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const[messages, setMessages] = useState([]);
   const connect = () => {
     const sock = new SockJS("http://localhost:8080/ws");
@@ -298,6 +299,7 @@ const HomePage = () => {
                       >
                       <hr />
                       <ChatCard
+                          isChat={false}
                           name={item.full_name}
                           userImg={
                             item.profile_picture || 
@@ -332,6 +334,17 @@ const HomePage = () => {
                             "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460__340.png" :
                             item.users[1].profile_picture ||
                             "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460__340.png"
+                          }
+                          notification={notifications.length}
+                          isNotification={
+                            notifications[0]?.chat?.id === item.id
+                          }
+                          message={
+                            (item.id ===
+                              messages[messages.length - 1]?.chat?.id &&
+                              messages[messages.length - 1]?.content) ||
+                            (item.id === notifications[0]?.chat?.id &&
+                              notifications[0]?.content)
                           }
                         />
                       ) 
